@@ -20,6 +20,11 @@
 
       var closureDays = [];
 
+      var now = new Date();
+      var startYear = now.getMonth() < 10 ? now.getFullYear() - 1 : now.getFullYear();
+      var startDate = new Date('' + startYear + '-10-01');
+      var endDate = new Date('' + (startYear+1) + '-09-30');
+
       // Client ID and API key from the Developer Console
       var CLIENT_ID = '1054709840369-u807mdk8v4maro8q6r2nremo4tajjdmf.apps.googleusercontent.com';
       var API_KEY = 'AIzaSyD5EAF9pYHkuCfMwH7TEB3qK7icef5dEjM';
@@ -70,7 +75,7 @@
         if (isSignedIn) {
           authorizeButton.style.display = 'none';
           signoutButton.style.display = 'block';
-          listUpcomingEvents();
+          getLeaveDays();
         } else {
           authorizeButton.style.display = 'block';
           signoutButton.style.display = 'none';
@@ -103,18 +108,40 @@
         pre.appendChild(textContent);
       }
 
-      /**
-       * Print the summary and start datetime/date of the next ten events in
-       * the authorized user's calendar. If no events are found an
-       * appropriate message is printed.
-       */
-      function listUpcomingEvents() {
+      function getClosureDays() {
         gapi.client.calendar.events.list({
-          'calendarId': 'EVENTS',
-          'timeMin': (new Date()).toISOString(),
+          'calendarId': EVENTS,
+          'timeMin': startDate.toISOString(),
+          'timeMax': endDate.toISOString(),
           'showDeleted': false,
           'singleEvents': true,
-          'maxResults': 10,
+          'maxResults': 1000,
+          'orderBy': 'startTime'
+        }).then(function(response) {
+          var events = response.result.items;
+
+          for (i = 0; i < events.length; i++) {
+            var event = events[i];
+            if (event.summary.match(/university closed/i)) {
+              var days = expandDays(event);
+              days.forEach(function (day) {
+                  if (day.getDay() !== 0 && day.getDay() !== 6) {
+                      closureDays.push(day);
+                  }
+              });
+            }
+          }
+        });
+      }
+
+      function getLeaveDays() {
+        gapi.client.calendar.events.list({
+          'calendarId': 'primary',
+          'timeMin': startDate.toISOString(),
+          'timeMax': endDate.toISOString(),
+          'showDeleted': false,
+          'singleEvents': true,
+          'maxResults': 1000,
           'orderBy': 'startTime'
         }).then(function(response) {
           var events = response.result.items;
@@ -128,7 +155,7 @@
               if (!when) {
                 when = event.start.date;
               }
-              appendPre(event.summary + ' (' + when + ')')
+              appendPre('' + i + ' - ' + event.summary + ' (' + when + ')')
             }
           } else {
             appendPre('No upcoming events found.');
@@ -185,7 +212,9 @@
         var count = 0;
         for (var i = 0; i < dates.length; i++) {
             if (dates[i].getDay() !== 0 && dates[i].getDay() !== 6) {
-                count += 1
+                if (closureDays.some(function (d) { return d.getTime() === dates[i].getTime(); })) {
+                    count += 1
+                }
             }
         }
 
