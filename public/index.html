@@ -74,10 +74,10 @@
       function updateSigninStatus(isSignedIn) {
         if (isSignedIn) {
           authorizeButton.style.display = 'none';
-          signoutButton.style.display = 'block';
-          getLeaveDays();
+          signoutButton.style.display = '';
+          getClosureDays();
         } else {
-          authorizeButton.style.display = 'block';
+          authorizeButton.style.display = '';
           signoutButton.style.display = 'none';
         }
       }
@@ -127,10 +127,13 @@
               days.forEach(function (day) {
                   if (day.getDay() !== 0 && day.getDay() !== 6) {
                       closureDays.push(day);
+                      appendPre('Closure day ' + closureDays.length + ' ' + day.toISOString());
                   }
               });
             }
           }
+
+          getLeaveDays();
         });
       }
 
