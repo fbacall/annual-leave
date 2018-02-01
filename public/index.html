@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Google Calendar API Quickstart</title>
+    <title>Annual Leave Calculator</title>
     <meta charset='utf-8' />
   </head>
   <body>
-    <p>Google Calendar API Quickstart</p>
+    <p>Annual Leave Calculator</p>
 
     <!--Add buttons to initiate auth sequence and sign out-->
-    <button id="authorize-button" style="display: none;">Authorize</button>
+    <button id="authorize-button" style="display: none;">Authorize w/ Google</button>
     <button id="signout-button" style="display: none;">Sign Out</button>
 
     <pre id="content"></pre>
@@ -17,6 +17,10 @@
       // Calendar IDs
       var EVENTS = '0677eej491em8t3r85h0i12s8g@group.calendar.google.com';
       var AVAILABILITY = 'nrd1gh8ffgsgf259tjcam5h3qs@group.calendar.google.com';
+
+      var CASELESS_TAGS= ['holiday', 'annual', 'hols', '(al)'];
+      var TAGS = ['AL', 'A/L'];
+      var HOLIDAYS = 29;
 
       var closureDays = [];
 
@@ -108,6 +112,10 @@
         pre.appendChild(textContent);
       }
 
+      function userEmail() {
+        return gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+      }
+
       function getClosureDays() {
         gapi.client.calendar.events.list({
           'calendarId': EVENTS,
@@ -127,7 +135,6 @@
               days.forEach(function (day) {
                   if (day.getDay() !== 0 && day.getDay() !== 6) {
                       closureDays.push(day);
-                      appendPre('Closure day ' + closureDays.length + ' ' + day.toISOString());
                   }
               });
             }
@@ -139,7 +146,7 @@
 
       function getLeaveDays() {
         gapi.client.calendar.events.list({
-          'calendarId': 'primary',
+          'calendarId': AVAILABILITY,
           'timeMin': startDate.toISOString(),
           'timeMax': endDate.toISOString(),
           'showDeleted': false,
@@ -148,21 +155,44 @@
           'orderBy': 'startTime'
         }).then(function(response) {
           var events = response.result.items;
-          ting = events;
-          appendPre('Upcoming events:');
+          var filtered = events.filter(function (event) {
+            var sum = event.summary.split(' ', 2)[1];
 
-          if (events.length > 0) {
-            for (i = 0; i < events.length; i++) {
-              var event = events[i];
+            if (event.creator.email === userEmail()) {
+              if (sum) {
+                return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
+                        (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().startsWith(t); }) ||
+                        TAGS.some(function (t) { return sum.startsWith(t); }))
+              } else {
+                return false;
+              }
+            } else {
+              return false;
+            }
+          });
+
+          ting = filtered;
+          appendPre('Holidays:');
+
+          var leaveTaken = 0;
+
+          if (filtered.length > 0) {
+            for (i = 0; i < filtered.length; i++) {
+              var event = filtered[i];
+              var days = holidaysUsed(event);
+              leaveTaken += days;
               var when = event.start.dateTime;
               if (!when) {
                 when = event.start.date;
               }
-              appendPre('' + i + ' - ' + event.summary + ' (' + when + ')')
+              appendPre('' + (i+1) + ' - ' + event.summary + ' (' + when + ') (' + days + ' days)' )
             }
           } else {
-            appendPre('No upcoming events found.');
+            appendPre('No leave found for ' + userEmail());
           }
+
+          appendPre('');
+          appendPre('Leave taken: ' + leaveTaken + ' / ' + HOLIDAYS + ' days');
         });
       }
 
@@ -211,12 +241,13 @@
 
       function holidaysUsed(event) {
         var dates = expandDays(event);
+        console.log(dates);
 
         var count = 0;
         for (var i = 0; i < dates.length; i++) {
             if (dates[i].getDay() !== 0 && dates[i].getDay() !== 6) {
-                if (closureDays.some(function (d) { return d.getTime() === dates[i].getTime(); })) {
-                    count += 1
+                if (!closureDays.some(function (d) { return d.getTime() === dates[i].getTime(); })) {
+                    count += 1;
                 }
             }
         }
