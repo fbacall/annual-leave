@@ -12,6 +12,7 @@
     <button id="signout-button" style="display: none;">Sign Out</button>
 
     <pre id="content"></pre>
+    <pre id="status"></pre>
 
     <script type="text/javascript">
       // Calendar IDs
@@ -56,6 +57,7 @@
        *  listeners.
        */
       function initClient() {
+        document.getElementById('content').innerText = '';
         gapi.client.init({
           apiKey: API_KEY,
           clientId: CLIENT_ID,
@@ -118,6 +120,7 @@
       }
 
       function getClosureDays() {
+        document.getElementById('content').innerText = 'Fetching closure days...';
         gapi.client.calendar.events.list({
           'calendarId': EVENTS,
           'timeMin': startDate.toISOString(),
@@ -146,6 +149,7 @@
       }
 
       function getLeaveDays() {
+        document.getElementById('content').innerText = 'Fetching leave...';
         gapi.client.calendar.events.list({
           'calendarId': AVAILABILITY,
           'timeMin': startDate.toISOString(),
@@ -155,6 +159,7 @@
           'maxResults': 1000,
           'orderBy': 'startTime'
         }).then(function(response) {
+          document.getElementById('content').innerText = '';
           var events = response.result.items;
           var filtered = events.filter(function (event) {
             var sum = event.summary.split(' ', 2)[1];
