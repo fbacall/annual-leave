@@ -119,6 +119,10 @@
         return gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
       }
 
+      function userName() {
+        return gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getGivenName();
+      }
+
       function getClosureDays() {
         document.getElementById('content').innerText = 'Fetching closure days...';
         gapi.client.calendar.events.list({
@@ -162,9 +166,11 @@
           document.getElementById('content').innerText = '';
           var events = response.result.items;
           var filtered = events.filter(function (event) {
-            var sum = event.summary.split(' ', 2)[1];
+            var parts = event.summary.split(' ', 2);
+            var sum = parts[1];
+            var name = parts[0];
 
-            if (event.creator.email === userEmail()) {
+            if (event.creator.email === userEmail() || name === userName()) {
               if (sum) {
                 return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
                         (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().startsWith(t); }) ||
@@ -191,7 +197,7 @@
               if (!when) {
                 when = event.start.date;
               }
-              appendPre('' + (i+1) + ' - ' + event.summary + ' (' + when + ') (' + days + ' days)' )
+              appendPre('' + (i+1) + ' - ' + event.summary + ' [' + event.creator.email + '] (' + when + ') (' + days + ' days)' )
             }
           } else {
             appendPre('No holidays found for ' + userEmail());
