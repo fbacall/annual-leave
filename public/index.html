@@ -8,7 +8,7 @@
     <p>Annual Leave Calculator</p>
 
     <!--Add buttons to initiate auth sequence and sign out-->
-    <button id="authorize-button" style="display: none;">Authorize w/ Google</button>
+    <button id="authorize-button" style="display: none;">Authorize</button>
     <button id="signout-button" style="display: none;">Sign Out</button>
 
     <pre id="content"></pre>
@@ -18,8 +18,9 @@
       var EVENTS = '0677eej491em8t3r85h0i12s8g@group.calendar.google.com';
       var AVAILABILITY = 'nrd1gh8ffgsgf259tjcam5h3qs@group.calendar.google.com';
 
-      var CASELESS_TAGS= ['holiday', 'annual', 'hols', '(al)'];
+      var CASELESS_TAGS = ['holiday', 'annual', 'hols', '(al)'];
       var TAGS = ['AL', 'A/L'];
+      var HALFDAY_TAGS = ['AM','(AM)','PM','(PM)','pm'];
       var HOLIDAYS = 29;
 
       var closureDays = [];
@@ -196,34 +197,6 @@
         });
       }
 
-
-//      def expand_days(event)
-//      start_date = Date.parse(event.start.date)
-//      end_date = Date.parse(event.end.date)
-//
-//      dates = []
-//      date = start_date
-//
-//      while date < end_date
-//          dates << date
-//      date += 1
-//      end
-//
-//      dates
-//      end
-//
-//      def holidays_used(event, closure_days)
-//      dates = expand_days(event)
-//
-//      count = dates.count { |d| !(d.saturday? || d.sunday? || closure_days.include?(d)) }
-//      if ['AM','(AM)','PM','(PM)','pm'].any? { |t| event.summary.end_with?(t) } || event.summary.downcase.include?('half day')
-//          count -= 0.5
-//      end
-//
-//      count
-//      end
-//
-
       function expandDays(event) {
         var start = new Date(event.start.date);
         var end = new Date(event.end.date);
@@ -241,15 +214,19 @@
 
       function holidaysUsed(event) {
         var dates = expandDays(event);
-        console.log(dates);
-
         var count = 0;
+
         for (var i = 0; i < dates.length; i++) {
             if (dates[i].getDay() !== 0 && dates[i].getDay() !== 6) {
                 if (!closureDays.some(function (d) { return d.getTime() === dates[i].getTime(); })) {
                     count += 1;
                 }
             }
+        }
+
+        if (HALFDAY_TAGS.some(function (t) { return event.summary.endsWith(t) }) ||
+                event.summary.toLowerCase().includes('half day')) {
+          count -= 0.5;
         }
 
         return count;
