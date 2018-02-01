@@ -1,0 +1,7 @@
+Privacy
+
+* No user information is stored on the server.
+
+* A cookie is used by Google's API to authenticate you on return visits, but not stored on the server.
+
+* We don't share any information.
