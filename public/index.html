@@ -166,21 +166,25 @@
           document.getElementById('content').innerText = '';
           var events = response.result.items;
           var filtered = events.filter(function (event) {
-            var parts = event.summary.split(' ', 2);
-            var sum = parts[1];
-            var name = parts[0];
+            var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
+              if (parts) {
+                  var name = parts[1];
+                  var sum = parts[2];
 
-            if (event.creator.email === userEmail() || name === userName()) {
-              if (sum) {
-                return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
-                        (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().startsWith(t); }) ||
-                        TAGS.some(function (t) { return sum.startsWith(t); }))
+                  if (event.creator.email === userEmail() || name === userName()) {
+                      if (sum) {
+                          return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
+                              (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().includes(t); }) ||
+                                  TAGS.some(function (t) { return sum.includes(t); }))
+                      } else {
+                          return false;
+                      }
+                  } else {
+                      return false;
+                  }
               } else {
-                return false;
+                  return false;
               }
-            } else {
-              return false;
-            }
           });
 
           ting = filtered;
@@ -204,7 +208,8 @@
           }
 
           appendPre('');
-          appendPre('Leave taken: ' + leaveTaken + ' / ' + HOLIDAYS + ' days');
+          appendPre('Leave taken: ' + leaveTaken + ' days');
+          appendPre('Leave remaining: ' + (HOLIDAYS - leaveTaken) + ' days');
           var remaining = Math.floor((endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
           appendPre(remaining + ' days until reset');
         });
