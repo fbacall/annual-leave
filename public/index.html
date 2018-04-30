@@ -139,7 +139,7 @@
           for (i = 0; i < events.length; i++) {
             var event = events[i];
             if (event.summary.match(/university closed/i)) {
-              var days = expandDays(event);
+              var days = expandDays(event.start.date, event.end.date);
               days.forEach(function (day) {
                   if (day.getDay() !== 0 && day.getDay() !== 6) {
                       closureDays.push(day);
@@ -210,14 +210,16 @@
           appendPre('');
           appendPre('Leave taken: ' + leaveTaken + ' days');
           appendPre('Leave remaining: ' + (HOLIDAYS - leaveTaken) + ' days');
-          var remaining = Math.floor((endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-          appendPre(remaining + ' days until reset');
+          var totalDaysLeft = Math.floor((endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+          var workingDaysLeft = countWorkingDays(expandDays(now, endDate));
+          appendPre('Days until reset: ' + totalDaysLeft);
+          appendPre('Working days until reset: ' + workingDaysLeft);
         });
       }
 
-      function expandDays(event) {
-        var start = new Date(event.start.date);
-        var end = new Date(event.end.date);
+      function expandDays(start, end) {
+        var start = new Date(start);
+        var end = new Date(end);
         var date = start;
         var dates = [];
 
@@ -231,7 +233,18 @@
       }
 
       function holidaysUsed(event) {
-        var dates = expandDays(event);
+        var dates = expandDays(event.start.date, event.end.date);
+        var count = countWorkingDays(dates);
+
+        if (HALFDAY_TAGS.some(function (t) { return event.summary.endsWith(t) }) ||
+                event.summary.toLowerCase().includes('half day')) {
+          count -= 0.5;
+        }
+
+        return count;
+      }
+
+      function countWorkingDays(dates) {
         var count = 0;
 
         for (var i = 0; i < dates.length; i++) {
@@ -240,11 +253,6 @@
                     count += 1;
                 }
             }
-        }
-
-        if (HALFDAY_TAGS.some(function (t) { return event.summary.endsWith(t) }) ||
-                event.summary.toLowerCase().includes('half day')) {
-          count -= 0.5;
         }
 
         return count;
