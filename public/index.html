@@ -103,16 +103,18 @@
         gapi.auth2.getAuthInstance().signOut();
       }
 
-      /**
-       * Append a pre element to the body containing the given message
-       * as its text node. Used to display the results of the API call.
-       *
-       * @param {string} message Text to be placed in pre element.
-       */
-      function appendPre(message) {
-        var pre = document.getElementById('content');
-        var textContent = document.createTextNode(message + '\n');
-        pre.appendChild(textContent);
+      function appendEl(message, type) {
+        var root = document.getElementById('content');
+        var el;
+
+        if (type) {
+          el = document.createElement(type);
+          el.appendChild(document.createTextNode(message));
+        } else {
+          el = document.createTextNode(message + '\n');
+        } 
+
+        root.appendChild(el);
       }
 
       function userEmail() {
@@ -188,11 +190,13 @@
           });
 
           ting = filtered;
-          appendPre('Holidays:');
+          appendEl('Holidays:');
 
           var leaveTaken = 0;
 
           if (filtered.length > 0) {
+            var list = document.createElement('ol');
+            document.getElementById('content').appendChild(list);
             for (i = 0; i < filtered.length; i++) {
               var event = filtered[i];
               var days = holidaysUsed(event);
@@ -201,19 +205,21 @@
               if (!when) {
                 when = event.start.date;
               }
-              appendPre('' + (i+1) + ' - ' + event.summary + ' [' + event.creator.email + '] (' + when + ') (' + days + ' days)' )
+              var li = document.createElement('li');
+              li.appendChild(document.createTextNode(event.summary + ' [' + event.creator.email + '] (' + when + ') (' + days + ' days)'));
+              list.appendChild(li);
             }
           } else {
-            appendPre('No holidays found for ' + userEmail());
+            appendEl('No holidays found for ' + userEmail());
           }
 
-          appendPre('');
-          appendPre('Leave taken: ' + leaveTaken + ' days');
-          appendPre('Leave remaining: ' + (HOLIDAYS - leaveTaken) + ' days');
-          var totalDaysLeft = Math.floor((endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+          appendEl('');
+          appendEl('Leave taken: ' + leaveTaken + ' days');
+          appendEl('Leave remaining: ' + (HOLIDAYS - leaveTaken) + ' days');
+          var totalWeeksLeft = Math.floor((endDate.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
           var workingDaysLeft = countWorkingDays(expandDays(now, endDate));
-          appendPre('Days until reset: ' + totalDaysLeft);
-          appendPre('Working days until reset: ' + workingDaysLeft);
+          appendEl('Weeks until reset: ' + totalWeeksLeft + ' weeks');
+          appendEl('Working days until reset: ' + workingDaysLeft + ' days');
         });
       }
 
