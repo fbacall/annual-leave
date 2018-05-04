@@ -45,7 +45,7 @@
           <div class="row" v-if="ready">
             <div class="col-sm-12">
               <div class="progress">
-                <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" :aria-valuenow="leavePercent"
+                <div class="progress-bar progress-bar-striped" :class="progressBarColour" role="progressbar" :aria-valuenow="leavePercent"
                      aria-valuemin="0" aria-valuemax="100" v-bind:style="{ width: leavePercent + '%' }">
                   <span>{{ leaveRemaining }} days</span>
                 </div>

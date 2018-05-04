@@ -38,6 +38,15 @@ var app = new Vue({
                 return countWorkingDays(expandDays(now, this.endDate));
             else
                 return 0;
+        },
+        progressBarColour: function () {
+            if (this.leavePercent < 25) {
+                return 'progress-bar-danger';
+            } else if (this.leavePercent < 50) {
+                return 'progress-bar-warning';
+            } else {
+                return 'progress-bar-success';
+            }
         }
     }
 });
