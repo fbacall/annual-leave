@@ -13,7 +13,7 @@ var app = new Vue({
     },
     computed: {
         ready: function () {
-          return this.status === '';
+          return this.status === null;
         },
         startDate: function () {
             return new Date('' + this.startYear + '-10-01');
@@ -106,6 +106,7 @@ function updateSigninStatus(isSignedIn) {
     } else {
         authorizeButton.style.display = '';
         signoutButton.style.display = 'none';
+        app.status = '';
     }
 }
 
@@ -113,6 +114,7 @@ function updateSigninStatus(isSignedIn) {
  *  Sign in the user upon button click.
  */
 function handleAuthClick(event) {
+    app.status = 'Authenticating...';
     gapi.auth2.getAuthInstance().signIn();
 }
 
@@ -192,8 +194,8 @@ function getLeaveDays() {
             }
         });
 
-        app.status = '';
-        document.getElementById('modal').classList.add('show');
+        app.status = null;
+        document.getElementById('modal').classList.add('in');
     });
 }
 
