@@ -3,16 +3,37 @@
   <head>
     <title>Annual Leave Usage</title>
     <meta charset='utf-8' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style type="text/css">
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #wrapper { }
+    </style>
   </head>
   <body>
-    <p>Annual Leave Usage</p>
+    <div id="wrapper">
+      <p>Annual Leave Usage</p>
 
-    <!--Add buttons to initiate auth sequence and sign out-->
-    <button id="authorize-button" style="display: none;">Authorize</button>
-    <button id="signout-button" style="display: none;">Sign Out</button>
+      <!--Add buttons to initiate auth sequence and sign out-->
+      <button id="authorize-button" class="btn btn-default" style="display: none;">Authorize</button>
+      <button id="signout-button" class="btn btn-default" style="display: none;">Sign Out</button>
 
-    <pre id="content"></pre>
-    <pre id="status"></pre>
+      <div id="content"></div>
+    </div>
 
     <script type="text/javascript">
       // Calendar IDs
@@ -190,7 +211,7 @@
           });
 
           ting = filtered;
-          appendEl('Holidays:');
+          appendEl('Holiday events:');
 
           var leaveTaken = 0;
 
@@ -206,7 +227,8 @@
                 when = event.start.date;
               }
               var li = document.createElement('li');
-              li.appendChild(document.createTextNode(event.summary + ' [' + event.creator.email + '] (' + when + ') (' + days + ' days)'));
+              li.title = event.creator.email;
+              li.appendChild(document.createTextNode(when + ' (' + days + ' days) - ' + event.summary));
               list.appendChild(li);
             }
           } else {
