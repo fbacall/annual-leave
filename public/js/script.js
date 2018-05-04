@@ -1,11 +1,9 @@
 var now = new Date();
-var startYear = now.getMonth() < 10 ? now.getFullYear() - 1 : now.getFullYear();
-var startDate = new Date('' + startYear + '-10-01');
-var endDate = new Date('' + (startYear+1) + '-09-30');
 
 var app = new Vue({
     el: '#app',
     data: {
+        startYear: (now.getMonth() < 10 ? now.getFullYear() - 1 : now.getFullYear()),
         leaveAllowance: 29,
         holidays: [],
         closureDays: [],
@@ -17,6 +15,12 @@ var app = new Vue({
         ready: function () {
           return this.status === '';
         },
+        startDate: function () {
+            return new Date('' + this.startYear + '-10-01');
+        },
+        endDate: function () {
+            return new Date('' + (this.startYear + 1) + '-09-30');
+        },
         leaveTaken: function () {
                 return this.holidays.reduce(function (acc, event) { return acc + holidaysUsed(event) }, 0);
         },
@@ -27,11 +31,11 @@ var app = new Vue({
           return Math.ceil(100 * (this.leaveRemaining / this.leaveAllowance))
         },
         weeksLeft: function () {
-            return Math.floor((endDate.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
+            return Math.floor((this.endDate.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
         },
         workingDaysLeft: function () {
             if (this.closureDays.length)
-                return countWorkingDays(expandDays(now, endDate));
+                return countWorkingDays(expandDays(now, this.endDate));
             else
                 return 0;
         }
@@ -96,6 +100,8 @@ function updateSigninStatus(isSignedIn) {
     if (isSignedIn) {
         authorizeButton.style.display = 'none';
         signoutButton.style.display = '';
+        app.userName = userName();
+        app.userEmail = userEmail();
         getClosureDays();
     } else {
         authorizeButton.style.display = '';
@@ -129,17 +135,16 @@ function getClosureDays() {
     app.status = 'Fetching closure days...';
     gapi.client.calendar.events.list({
         'calendarId': EVENTS,
-        'timeMin': startDate.toISOString(),
-        'timeMax': endDate.toISOString(),
+        'timeMin': app.startDate.toISOString(),
+        'timeMax': app.endDate.toISOString(),
         'showDeleted': false,
         'singleEvents': true,
         'maxResults': 1000,
         'orderBy': 'startTime'
     }).then(function(response) {
-        var events = response.result.items;
+        app.closureDays = [];
 
-        for (i = 0; i < events.length; i++) {
-            var event = events[i];
+        response.result.items.forEach(function (event) {
             if (event.summary.match(/university closed/i)) {
                 var days = expandDays(event.start.date, event.end.date);
                 days.forEach(function (day) {
@@ -148,7 +153,7 @@ function getClosureDays() {
                     }
                 });
             }
-        }
+        });
 
         getLeaveDays();
     });
@@ -158,15 +163,14 @@ function getLeaveDays() {
     app.status = 'Fetching leave...';
     gapi.client.calendar.events.list({
         'calendarId': AVAILABILITY,
-        'timeMin': startDate.toISOString(),
-        'timeMax': endDate.toISOString(),
+        'timeMin': app.startDate.toISOString(),
+        'timeMax': app.endDate.toISOString(),
         'showDeleted': false,
         'singleEvents': true,
         'maxResults': 1000,
         'orderBy': 'startTime'
     }).then(function(response) {
-        var events = response.result.items;
-        app.holidays = events.filter(function (event) {
+        app.holidays = response.result.items.filter(function (event) {
             var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
             if (parts) {
                 var name = parts[1];
@@ -187,10 +191,8 @@ function getLeaveDays() {
                 return false;
             }
         });
-        app.status = '';
-        app.userName = userName();
-        app.userEmail = userEmail();
 
+        app.status = '';
         document.getElementById('modal').classList.add('show');
     });
 }
