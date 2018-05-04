@@ -26,11 +26,11 @@
   </head>
   <body>
     <div id="wrapper">
-      <p>Annual Leave Usage</p>
-
-      <!--Add buttons to initiate auth sequence and sign out-->
-      <button id="authorize-button" class="btn btn-default" style="display: none;">Authorize</button>
-      <button id="signout-button" class="btn btn-default" style="display: none;">Sign Out</button>
+      <h1>
+        Annual Leave Usage
+        <button id="authorize-button" class="pull-right btn btn-default" style="display: none;">Authorize</button>
+        <button id="signout-button" class="pull-right btn btn-xs btn-default" style="display: none;">Sign Out</button>
+      </h1>
 
       <div id="content"></div>
     </div>
@@ -138,6 +138,15 @@
         root.appendChild(el);
       }
 
+      function makeEl(parent, type, content) {
+          var el = document.createElement(type);
+          if (content)
+            el.appendChild(document.createTextNode(content));
+          parent.appendChild(el);
+
+          return el;
+      }
+
       function userEmail() {
         return gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
       }
@@ -186,7 +195,8 @@
           'maxResults': 1000,
           'orderBy': 'startTime'
         }).then(function(response) {
-          document.getElementById('content').innerText = '';
+          var content = document.getElementById('content');
+          content.innerText = '';
           var events = response.result.items;
           var filtered = events.filter(function (event) {
             var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
@@ -211,13 +221,18 @@
           });
 
           ting = filtered;
+
+          var dl = makeEl(content, 'dl');
+          dl.className = 'dl-horizontal';
+          document.getElementById('content').appendChild(dl);
+
           appendEl('Holiday events:');
 
           var leaveTaken = 0;
 
           if (filtered.length > 0) {
             var list = document.createElement('ol');
-            document.getElementById('content').appendChild(list);
+            content.appendChild(list);
             for (i = 0; i < filtered.length; i++) {
               var event = filtered[i];
               var days = holidaysUsed(event);
@@ -235,13 +250,16 @@
             appendEl('No holidays found for ' + userEmail());
           }
 
-          appendEl('');
-          appendEl('Leave taken: ' + leaveTaken + ' days');
-          appendEl('Leave remaining: ' + (HOLIDAYS - leaveTaken) + ' days');
+          makeEl(dl, 'dt', 'Leave taken');
+          makeEl(dl, 'dd', '' + leaveTaken + ' days');
+          makeEl(dl, 'dt', 'Leave remaining');
+          makeEl(dl, 'dd', '' + (HOLIDAYS - leaveTaken) + ' days');
           var totalWeeksLeft = Math.floor((endDate.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
           var workingDaysLeft = countWorkingDays(expandDays(now, endDate));
-          appendEl('Weeks until reset: ' + totalWeeksLeft + ' weeks');
-          appendEl('Working days until reset: ' + workingDaysLeft + ' days');
+          makeEl(dl, 'dt', 'Weeks until reset')
+          makeEl(dl, 'dd', '' + totalWeeksLeft + ' weeks');
+          makeEl(dl, 'dt', 'Working days until reset');
+          makeEl(dl, 'dd', '' + workingDaysLeft + ' days');
         });
       }
 
