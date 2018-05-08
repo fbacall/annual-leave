@@ -21,8 +21,33 @@
       justify-content: center;
     }
 
-    .status {
-      text-align: center;
+    /*.status {*/
+      /*text-align: center;*/
+    /*}*/
+
+    .loading {
+      position: relative;
+      padding-left: 5px;
+    }
+
+    @keyframes spinner {
+      to {transform: rotate(360deg);}
+    }
+
+    .loading:before {
+      content: '';
+      box-sizing: border-box;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      margin-top: -10px;
+      margin-left: -20px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      border-top-color: #333;
+      animation: spinner .6s linear infinite;
     }
   </style>
 </head>
@@ -38,11 +63,8 @@
         </h3>
       </div>
       <div class="modal-body">
-        <div class="text-center">
-          <button id="authorize-button" class="btn btn-primary btn-lg" style="display: none;">Authenticate with Google</button>
-        </div>
         <div id="app">
-          <div class="row" v-if="ready">
+          <div class="row">
             <div class="col-sm-12">
               <div class="progress">
                 <div class="progress-bar progress-bar-striped" :class="progressBarColour" role="progressbar" :aria-valuenow="leavePercent"
@@ -59,7 +81,7 @@
                 <dt>Working days left</dt><dd>{{ workingDaysLeft }} days</dd>
               </dl>
             </div>
-            <div class="col-sm-9">
+            <div class="col-sm-9" v-if="ready">
               Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
               <ol>
                 <li v-for="(event, index) in holidays" :title="event.creator.email">
@@ -68,9 +90,17 @@
                 </li>
               </ol>
             </div>
-          </div>
-          <div class="row" v-else>
-            <div class="col-sm-12 status">{{ status }}</div>
+            <div class="col-sm-9 status" v-else>
+              <div class="loading" v-if="status">
+                {{ status }}
+              </div>
+              <div id="authorize-button-container" style="display: none;">
+                <p>
+                  Sign-in with your Google credentials to see your holidays.
+                </p>
+                <button id="authorize-button" class="btn btn-primary">Authenticate</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
