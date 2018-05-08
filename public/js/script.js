@@ -13,7 +13,7 @@ var app = new Vue({
     },
     computed: {
         ready: function () {
-          return this.status === null;
+            return this.status === null;
         },
         startDate: function () {
             return new Date('' + this.startYear + '-10-01');
@@ -22,22 +22,32 @@ var app = new Vue({
             return new Date('' + (this.startYear + 1) + '-09-30');
         },
         leaveTaken: function () {
-                return this.holidays.reduce(function (acc, event) { return acc + holidaysUsed(event) }, 0);
+            return this.holidays.reduce(function (acc, event) { return acc + holidaysUsed(event) }, 0);
         },
         leaveRemaining: function () {
             return this.leaveAllowance - this.leaveTaken;
         },
         leavePercent: function () {
-          return Math.ceil(100 * (this.leaveRemaining / this.leaveAllowance))
+            return Math.ceil(100 * (this.leaveRemaining / this.leaveAllowance))
         },
         weeksLeft: function () {
-            return Math.floor((this.endDate.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
+            return Math.floor((this.endDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000));
+        },
+        weekdaysLeft: function () {
+            var today = new Date('' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate());
+            return expandDays(today, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
         },
         workingDaysLeft: function () {
-            if (this.closureDays.length)
-                return countWorkingDays(expandDays(now, this.endDate));
-            else
-                return 0;
+            var count = 0;
+
+            var self = this;
+            this.weekdaysLeft.forEach(function (day) {
+                if (!self.closureDays.some(function (d) { return d.getTime() === day.getTime(); })) {
+                    count += 1;
+                }
+            });
+
+            return count;
         },
         progressBarColour: function () {
             if (this.leavePercent < 25) {
@@ -70,7 +80,9 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 
 var authorizeButton = document.getElementById('authorize-button');
+var authorizeButtonContainer = document.getElementById('authorize-button-container');
 var signoutButton = document.getElementById('signout-button');
+var modal = document.getElementById('modal');
 
 /**
  *  On load, called to load the auth2 library and API client library.
@@ -84,7 +96,6 @@ function handleClientLoad() {
  *  listeners.
  */
 function initClient() {
-    // document.getElementById('content').innerText = '';
     gapi.client.init({
         apiKey: API_KEY,
         clientId: CLIENT_ID,
@@ -107,13 +118,13 @@ function initClient() {
  */
 function updateSigninStatus(isSignedIn) {
     if (isSignedIn) {
-        authorizeButton.style.display = 'none';
+        authorizeButtonContainer.style.display = 'none';
         signoutButton.style.display = '';
         app.userName = userName();
         app.userEmail = userEmail();
         getClosureDays();
     } else {
-        authorizeButton.style.display = '';
+        authorizeButtonContainer.style.display = '';
         signoutButton.style.display = 'none';
         app.status = '';
     }
@@ -204,7 +215,7 @@ function getLeaveDays() {
         });
 
         app.status = null;
-        document.getElementById('modal').classList.add('in');
+        modal.classList.add('in');
     });
 }
 
@@ -236,10 +247,11 @@ function holidaysUsed(event) {
 
 function countWorkingDays(dates) {
     var count = 0;
+    var closureDays = app ? app.closureDays : [];
 
     for (var i = 0; i < dates.length; i++) {
         if (dates[i].getDay() !== 0 && dates[i].getDay() !== 6) {
-            if (!app.closureDays.some(function (d) { return d.getTime() === dates[i].getTime(); })) {
+            if (!closureDays.some(function (d) { return d.getTime() === dates[i].getTime(); })) {
                 count += 1;
             }
         }
