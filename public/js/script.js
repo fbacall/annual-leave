@@ -9,7 +9,8 @@ var app = new Vue({
         closureDays: [],
         userName: '',
         userEmail: '',
-        status: 'Loading...'
+        status: 'Loading...',
+        signedIn: false
     },
     computed: {
         ready: function () {
@@ -80,7 +81,6 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 
 var authorizeButton = document.getElementById('authorize-button');
-var authorizeButtonContainer = document.getElementById('authorize-button-container');
 var signoutButton = document.getElementById('signout-button');
 var modal = document.getElementById('modal');
 
@@ -117,16 +117,18 @@ function initClient() {
  *  appropriately. After a sign-in, the API is called.
  */
 function updateSigninStatus(isSignedIn) {
+    app.signedIn = isSignedIn;
     if (isSignedIn) {
-        authorizeButtonContainer.style.display = 'none';
         signoutButton.style.display = '';
         app.userName = userName();
         app.userEmail = userEmail();
         getClosureDays();
     } else {
-        authorizeButtonContainer.style.display = '';
         signoutButton.style.display = 'none';
         app.status = '';
+        app.userName = '';
+        app.userEmail = '';
+        app.holidays = [];
     }
 }
 

@@ -95,7 +95,7 @@
               <div class="loading" v-if="status">
                 {{ status }}
               </div>
-              <div id="authorize-button-container" style="display: none;">
+              <div id="authorize-button-container" v-unless="signedIn">
                 <p>
                   Sign-in with your Google credentials to see your holidays.
                 </p>
