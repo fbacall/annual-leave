@@ -109,8 +109,9 @@ function initClient() {
 function updateSigninStatus(isSignedIn) {
     app.signedIn = isSignedIn;
     if (isSignedIn) {
-        app.userName = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getGivenName();
-        app.userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+        var profile = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
+        app.userName = profile.getGivenName();
+        app.userEmail = profile.getEmail();
         getClosureDays();
     } else {
         app.status = null;
