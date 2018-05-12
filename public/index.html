@@ -22,10 +22,6 @@
       background-color: #61c2ff;
     }
 
-    /*.status {*/
-      /*text-align: center;*/
-    /*}*/
-
     .loading {
       position: relative;
       padding-left: 5px;
@@ -56,51 +52,49 @@
 
 <div class="modal show" tabindex="-1" role="dialog" id="modal">
   <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
+    <div class="modal-content" id="app">
       <div class="modal-header">
         <h3 class="modal-title">
           Annual Leave
-          <button id="signout-button" class="pull-right btn btn-xs btn-default" style="display: none;">Sign Out</button>
+          <button id="signout-button" class="pull-right btn btn-xs btn-default" v-show="showSignoutButton">Sign Out</button>
         </h3>
       </div>
       <div class="modal-body">
-        <div id="app">
-          <div class="row">
-            <div class="col-sm-12">
-              <div class="progress">
-                <div class="progress-bar progress-bar-striped" :class="progressBarColour" role="progressbar" :aria-valuenow="leavePercent"
-                     aria-valuemin="0" aria-valuemax="100" v-bind:style="{ width: leavePercent + '%' }">
-                  <span>{{ leaveRemaining }} days</span>
-                </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped" :class="progressBarColour" role="progressbar" :aria-valuenow="leavePercent"
+                   aria-valuemin="0" aria-valuemax="100" v-bind:style="{ width: leavePercent + '%' }">
+                <span>{{ leaveRemaining }} days</span>
               </div>
             </div>
-            <div class="col-sm-3">
-              <dl>
-                <dt>Leave taken</dt><dd>{{ leaveTaken }} days</dd>
-                <dt>Leave remaining</dt><dd>{{ leaveRemaining }} days</dd>
-                <dt>Weeks left</dt><dd>{{ weeksLeft }} weeks</dd>
-                <dt>Working days left</dt><dd>{{ workingDaysLeft }} days</dd>
-              </dl>
+          </div>
+          <div class="col-sm-3">
+            <dl>
+              <dt>Leave taken</dt><dd>{{ leaveTaken }} days</dd>
+              <dt>Leave remaining</dt><dd>{{ leaveRemaining }} days</dd>
+              <dt>Weeks left</dt><dd>{{ weeksLeft }} weeks</dd>
+              <dt>Working days left</dt><dd>{{ workingDaysLeft }} days</dd>
+            </dl>
+          </div>
+          <div class="col-sm-9" v-show="ready">
+            Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
+            <ol>
+              <li v-for="(event, index) in holidays" :title="event.creator.email">
+                {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
+                - <em>{{ event.summary }}</em>
+              </li>
+            </ol>
+          </div>
+          <div class="col-sm-9 status" v-show="!ready">
+            <div class="loading" v-if="status">
+              {{ status }}
             </div>
-            <div class="col-sm-9" v-if="ready">
-              Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
-              <ol>
-                <li v-for="(event, index) in holidays" :title="event.creator.email">
-                  {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
-                  - <em>{{ event.summary }}</em>
-                </li>
-              </ol>
-            </div>
-            <div class="col-sm-9 status" v-else>
-              <div class="loading" v-if="status">
-                {{ status }}
-              </div>
-              <div id="authorize-button-container" v-unless="signedIn">
-                <p>
-                  Sign-in with your Google credentials to see your holidays.
-                </p>
-                <button id="authorize-button" class="btn btn-primary">Authenticate</button>
-              </div>
+            <div id="authorize-button-container" v-show="showAuthButton">
+              <p>
+                Sign-in with your Google credentials to see your holidays.
+              </p>
+              <button id="authorize-button" class="btn btn-primary">Authenticate</button>
             </div>
           </div>
         </div>

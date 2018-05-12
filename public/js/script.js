@@ -1,3 +1,16 @@
+// Calendar IDs
+var EVENTS = '0677eej491em8t3r85h0i12s8g@group.calendar.google.com';
+var AVAILABILITY = 'nrd1gh8ffgsgf259tjcam5h3qs@group.calendar.google.com';
+// Keywords
+var CASELESS_TAGS = ['holiday', 'annual', 'hols', '(al)'];
+var TAGS = ['AL', 'A/L'];
+var HALFDAY_TAGS = ['AM','(AM)','PM','(PM)','pm','morning','afternoon'];
+// Google API stuff
+var CLIENT_ID = '1054709840369-u807mdk8v4maro8q6r2nremo4tajjdmf.apps.googleusercontent.com';
+var API_KEY = 'AIzaSyD5EAF9pYHkuCfMwH7TEB3qK7icef5dEjM';
+var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
+var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
+
 var now = new Date();
 
 var app = new Vue({
@@ -10,7 +23,8 @@ var app = new Vue({
         userName: '',
         userEmail: '',
         status: 'Loading...',
-        signedIn: false
+        showAuthButton: false,
+        showSignoutButton: false
     },
     computed: {
         ready: function () {
@@ -62,39 +76,12 @@ var app = new Vue({
     }
 });
 
-// Calendar IDs
-var EVENTS = '0677eej491em8t3r85h0i12s8g@group.calendar.google.com';
-var AVAILABILITY = 'nrd1gh8ffgsgf259tjcam5h3qs@group.calendar.google.com';
-var CASELESS_TAGS = ['holiday', 'annual', 'hols', '(al)'];
-var TAGS = ['AL', 'A/L'];
-var HALFDAY_TAGS = ['AM','(AM)','PM','(PM)','pm','morning','afternoon'];
-
-// Client ID and API key from the Developer Console
-var CLIENT_ID = '1054709840369-u807mdk8v4maro8q6r2nremo4tajjdmf.apps.googleusercontent.com';
-var API_KEY = 'AIzaSyD5EAF9pYHkuCfMwH7TEB3qK7icef5dEjM';
-
-// Array of API discovery doc URLs for APIs used by the quickstart
-var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
-
-// Authorization scopes required by the API; multiple scopes can be
-// included, separated by spaces.
-var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
-
-var authorizeButton = document.getElementById('authorize-button');
-var signoutButton = document.getElementById('signout-button');
-var modal = document.getElementById('modal');
-
-/**
- *  On load, called to load the auth2 library and API client library.
- */
+// Callback for API client script load.
 function handleClientLoad() {
     gapi.load('client:auth2', initClient);
 }
 
-/**
- *  Initializes the API client library and sets up sign-in state
- *  listeners.
- */
+// Initializes the API client library and sets up sign-in state listeners.
 function initClient() {
     gapi.client.init({
         apiKey: API_KEY,
@@ -107,24 +94,26 @@ function initClient() {
 
         // Handle the initial sign-in state.
         updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-        authorizeButton.onclick = handleAuthClick;
-        signoutButton.onclick = handleSignoutClick;
+        document.getElementById('authorize-button').onclick = function () {
+            app.status = 'Authenticating...';
+            gapi.auth2.getAuthInstance().signIn();
+        }
+        ;
+        document.getElementById('signout-button').onclick = function () {
+            gapi.auth2.getAuthInstance().signOut();
+        };
     });
 }
 
-/**
- *  Called when the signed in status changes, to update the UI
- *  appropriately. After a sign-in, the API is called.
- */
+// Callback for user sign in/out.
 function updateSigninStatus(isSignedIn) {
-    app.signedIn = isSignedIn;
+    app.showAuthButton = !isSignedIn;
+    app.showSignoutButton = isSignedIn;
     if (isSignedIn) {
-        signoutButton.style.display = '';
-        app.userName = userName();
-        app.userEmail = userEmail();
+        app.userName = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getGivenName();
+        app.userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
         getClosureDays();
     } else {
-        signoutButton.style.display = 'none';
         app.status = '';
         app.userName = '';
         app.userEmail = '';
@@ -132,29 +121,7 @@ function updateSigninStatus(isSignedIn) {
     }
 }
 
-/**
- *  Sign in the user upon button click.
- */
-function handleAuthClick(event) {
-    app.status = 'Authenticating...';
-    gapi.auth2.getAuthInstance().signIn();
-}
-
-/**
- *  Sign out the user upon button click.
- */
-function handleSignoutClick(event) {
-    gapi.auth2.getAuthInstance().signOut();
-}
-
-function userEmail() {
-    return gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
-}
-
-function userName() {
-    return gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getGivenName();
-}
-
+// Get university closure days
 function getClosureDays() {
     app.status = 'Fetching closure days...';
     gapi.client.calendar.events.list({
@@ -179,11 +146,12 @@ function getClosureDays() {
             }
         });
 
-        getLeaveDays();
+        getLeaveEvents();
     });
 }
 
-function getLeaveDays() {
+// Get user's annual leave events
+function getLeaveEvents() {
     app.status = 'Fetching leave...';
     gapi.client.calendar.events.list({
         'calendarId': AVAILABILITY,
@@ -200,7 +168,7 @@ function getLeaveDays() {
                 var name = parts[1];
                 var sum = parts[2];
 
-                if (event.creator.email === userEmail() || name === userName()) {
+                if (event.creator.email === app.userEmail || name === app.userName) {
                     if (sum) {
                         return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
                             (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().includes(t); }) ||
@@ -217,10 +185,15 @@ function getLeaveDays() {
         });
 
         app.status = null;
-        modal.classList.add('in');
     });
 }
 
+/**
+ * Returns an array of Dates for each day occurring between the two given dates (inclusive).
+ * @param {Date} start - The start date of the range.
+ * @param {Date} end - The end date of the range.
+ * @return {Array.<Date>} - The array of days.
+ */
 function expandDays(start, end) {
     var endTime = new Date(end).getTime();
     var date = new Date(start);
@@ -235,6 +208,11 @@ function expandDays(start, end) {
     return dates;
 }
 
+/**
+ * Returns the number of days of annual leave used by a given calendar event.
+ * @param {Event} event - The Google Calendar API Event.
+ * @return {number} - The number of days of annual leave used.
+ */
 function holidaysUsed(event) {
     var dates = expandDays(event.start.date, event.end.date);
     var count = countWorkingDays(dates);
@@ -247,6 +225,11 @@ function holidaysUsed(event) {
     return count;
 }
 
+/**
+ * Returns the number of working days present in an array of dates.
+ * @param {Array.<Date>} dates - An array of dates being counted.
+ * @return {number} - The number of working days.
+ */
 function countWorkingDays(dates) {
     var count = 0;
     var closureDays = app ? app.closureDays : [];
