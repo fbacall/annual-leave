@@ -16,7 +16,7 @@
       <div class="modal-header">
         <h3 class="modal-title">
           Annual Leave
-          <button id="signout-button" class="pull-right btn btn-xs btn-default" v-show="showSignoutButton">Sign Out</button>
+          <button class="pull-right btn btn-xs btn-default" v-if="ready && signedIn" @click="signOut">Sign Out</button>
         </h3>
       </div>
       <div class="modal-body">
@@ -37,24 +37,26 @@
               <dt>Working days left</dt><dd>{{ workingDaysLeft }} days</dd>
             </dl>
           </div>
-          <div class="col-sm-9" v-show="ready">
-            Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
-            <ol>
-              <li v-for="(event, index) in holidays" :title="event.creator.email">
-                {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
-                - <em>{{ event.summary }}</em>
-              </li>
-            </ol>
-          </div>
-          <div class="col-sm-9 status" v-show="!ready">
-            <div class="loading" v-if="status">
-              {{ status }}
+          <div class="col-sm-9">
+            <div v-if="ready">
+              <div v-if="signedIn">
+                Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
+                <ol>
+                  <li v-for="(event, index) in holidays" :title="event.creator.email">
+                    {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
+                    - <em>{{ event.summary }}</em>
+                  </li>
+                </ol>
+              </div>
+              <div id="authorize-button-container" v-else>
+                <p>
+                  Sign-in with your Google credentials to see your holidays.
+                </p>
+                <button class="btn btn-primary" @click="signIn">Authenticate</button>
+              </div>
             </div>
-            <div id="authorize-button-container" v-show="showAuthButton">
-              <p>
-                Sign-in with your Google credentials to see your holidays.
-              </p>
-              <button id="authorize-button" class="btn btn-primary">Authenticate</button>
+            <div class="loading status" v-else>
+              {{ status }}
             </div>
           </div>
         </div>

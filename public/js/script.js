@@ -23,8 +23,7 @@ var app = new Vue({
         userName: '',
         userEmail: '',
         status: 'Loading...',
-        showAuthButton: false,
-        showSignoutButton: false
+        signedIn: false
     },
     computed: {
         ready: function () {
@@ -73,6 +72,15 @@ var app = new Vue({
                 return 'progress-bar-success';
             }
         }
+    },
+    methods: {
+        signIn: function () {
+            app.status = 'Authenticating...';
+            gapi.auth2.getAuthInstance().signIn();
+        },
+        signOut: function () {
+            gapi.auth2.getAuthInstance().signOut();
+        }
     }
 });
 
@@ -94,27 +102,18 @@ function initClient() {
 
         // Handle the initial sign-in state.
         updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-        document.getElementById('authorize-button').onclick = function () {
-            app.status = 'Authenticating...';
-            gapi.auth2.getAuthInstance().signIn();
-        }
-        ;
-        document.getElementById('signout-button').onclick = function () {
-            gapi.auth2.getAuthInstance().signOut();
-        };
     });
 }
 
 // Callback for user sign in/out.
 function updateSigninStatus(isSignedIn) {
-    app.showAuthButton = !isSignedIn;
-    app.showSignoutButton = isSignedIn;
+    app.signedIn = isSignedIn;
     if (isSignedIn) {
         app.userName = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getGivenName();
         app.userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
         getClosureDays();
     } else {
-        app.status = '';
+        app.status = null;
         app.userName = '';
         app.userEmail = '';
         app.holidays = [];
