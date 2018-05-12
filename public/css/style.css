@@ -1,23 +1,15 @@
-html, body {
-    height: 100%;
-    padding: 0;
-    margin: 0;
-}
-
 body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background-color: #61c2ff;
 }
 
 .loading {
     position: relative;
     padding-left: 5px;
+    margin-left: 20px;
 }
 
 @keyframes spinner {
-    to {transform: rotate(360deg);}
+    to { transform: rotate(360deg); }
 }
 
 .loading:before {
@@ -34,4 +26,37 @@ body {
     border: 2px solid #ccc;
     border-top-color: #333;
     animation: spinner .6s linear infinite;
+}
+
+.app-wrapper {
+    position: relative;
+    width: auto;
+}
+
+@media only screen and (min-width: 768px) {
+    .app-wrapper {
+        margin: 30px auto;
+        width: 740px;
+    }
+}
+
+.app-container {
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.5);
+    background-color: #fff;
+    margin: 10px;
+}
+
+.app-header {
+    border-bottom: 1px solid #ccc;
+    padding: 15px;
+}
+
+.app-header h3 {
+    margin: 0;
+}
+
+.app-body {
+    padding: 15px;
 }

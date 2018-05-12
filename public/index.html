@@ -10,54 +10,50 @@
 </head>
 <body>
 
-<div class="modal show" tabindex="-1" role="dialog" id="modal">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content" id="app">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          Annual Leave
-          <button class="pull-right btn btn-xs btn-default" v-if="ready && signedIn" @click="signOut">Sign Out</button>
-        </h3>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-sm-12">
-            <div class="progress">
-              <div class="progress-bar progress-bar-striped" :class="progressBarColour" role="progressbar" :aria-valuenow="leavePercent"
-                   aria-valuemin="0" aria-valuemax="100" v-bind:style="{ width: leavePercent + '%' }">
-                <span>{{ leaveRemaining }} days</span>
-              </div>
+<div class="app-wrapper">
+  <div class="app-container" id="app">
+    <div class="app-header">
+      <h3>
+        Annual Leave
+        <button class="pull-right btn btn-xs btn-default" v-if="ready && signedIn" @click="signOut">Sign Out</button>
+      </h3>
+    </div>
+    <div class="app-body">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped" :class="progressBarColour" role="progressbar" :aria-valuenow="leavePercent"
+                 aria-valuemin="0" aria-valuemax="100" v-bind:style="{ width: leavePercent + '%' }">
+              <span>{{ leaveRemaining }} days</span>
             </div>
           </div>
-          <div class="col-sm-3">
-            <dl>
-              <dt>Leave taken</dt><dd>{{ leaveTaken }} days</dd>
-              <dt>Leave remaining</dt><dd>{{ leaveRemaining }} days</dd>
-              <dt>Weeks left</dt><dd>{{ weeksLeft }} weeks</dd>
-              <dt>Working days left</dt><dd>{{ workingDaysLeft }} days</dd>
-            </dl>
+        </div>
+        <div class="col-sm-3">
+          <dl>
+            <dt>Leave taken</dt><dd>{{ leaveTaken }} days</dd>
+            <dt>Leave remaining</dt><dd>{{ leaveRemaining }} days</dd>
+            <dt>Weeks left</dt><dd>{{ weeksLeft }} weeks</dd>
+            <dt>Working days left</dt><dd>{{ workingDaysLeft }} days</dd>
+          </dl>
+        </div>
+        <div class="col-sm-9">
+          <div v-if="ready">
+            <div v-if="signedIn">
+              Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
+              <ol>
+                <li v-for="(event, index) in holidays" :title="event.creator.email">
+                  {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
+                  - <em>{{ event.summary }}</em>
+                </li>
+              </ol>
+            </div>
+            <div id="authorize-button-container" v-else>
+              <p>Sign-in with your Google credentials to see your holidays.</p>
+              <button class="btn btn-primary" @click="signIn">Authenticate</button>
+            </div>
           </div>
-          <div class="col-sm-9">
-            <div v-if="ready">
-              <div v-if="signedIn">
-                Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
-                <ol>
-                  <li v-for="(event, index) in holidays" :title="event.creator.email">
-                    {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
-                    - <em>{{ event.summary }}</em>
-                  </li>
-                </ol>
-              </div>
-              <div id="authorize-button-container" v-else>
-                <p>
-                  Sign-in with your Google credentials to see your holidays.
-                </p>
-                <button class="btn btn-primary" @click="signIn">Authenticate</button>
-              </div>
-            </div>
-            <div class="loading status" v-else>
-              {{ status }}
-            </div>
+          <div class="loading status" v-else>
+            {{ status }}
           </div>
         </div>
       </div>
