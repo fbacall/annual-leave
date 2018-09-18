@@ -10,6 +10,13 @@ var CLIENT_ID = '1054709840369-u807mdk8v4maro8q6r2nremo4tajjdmf.apps.googleuserc
 var API_KEY = 'AIzaSyD5EAF9pYHkuCfMwH7TEB3qK7icef5dEjM';
 var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
 var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
+//
+var paramRegex = /\?extra=([0-9]+)/;
+var paramMatches = paramRegex.exec(window.location.href);
+var extraDays = 0;
+if (paramMatches && paramMatches[1]) {
+    extraDays = parseInt(paramMatches[1]);
+}
 
 var now = new Date();
 
@@ -17,7 +24,8 @@ var app = new Vue({
     el: '#app',
     data: {
         startYear: (now.getMonth() < 10 ? now.getFullYear() - 1 : now.getFullYear()),
-        leaveAllowance: 29,
+        baseLeaveAllowance: 29,
+        extraDays: extraDays,
         holidays: [],
         closureDays: [],
         userName: '',
@@ -34,6 +42,9 @@ var app = new Vue({
         },
         endDate: function () {
             return new Date('' + (this.startYear + 1) + '-09-30');
+        },
+        leaveAllowance: function () {
+            return this.baseLeaveAllowance + this.extraDays;
         },
         leaveTaken: function () {
             return this.holidays.reduce(function (acc, event) { return acc + holidaysUsed(event) }, 0);

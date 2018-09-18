@@ -11,7 +11,7 @@
 <body>
 
 <div class="app-wrapper">
-  <div class="app-container" id="app">
+  <div v-cloak class="app-container" id="app">
     <div class="app-header">
       <h3>
         Annual Leave
@@ -30,6 +30,9 @@
         </div>
         <div class="col-sm-3">
           <dl>
+            <template v-if="extraDays">
+              <dt>Days carried over</dt><dd>{{ extraDays }} days</dd>
+            </template>
             <dt>Leave taken</dt><dd>{{ leaveTaken }} days</dd>
             <dt>Leave remaining</dt><dd>{{ leaveRemaining }} days</dd>
             <dt>Weeks left</dt><dd>{{ weeksLeft }} weeks</dd>
