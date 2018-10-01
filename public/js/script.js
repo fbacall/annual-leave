@@ -56,11 +56,10 @@ var app = new Vue({
             return Math.ceil(100 * (this.leaveRemaining / this.leaveAllowance))
         },
         weeksLeft: function () {
-            return Math.floor((this.endDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000));
+            return Math.ceil((this.endDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000));
         },
         weekdaysLeft: function () {
-            var today = new Date('' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate());
-            return expandDays(today, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
+            return expandDays(now, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
         },
         workingDaysLeft: function () {
             var count = 0;
