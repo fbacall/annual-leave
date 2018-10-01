@@ -23,7 +23,7 @@ var now = new Date();
 var app = new Vue({
     el: '#app',
     data: {
-        startYear: (now.getMonth() < 10 ? now.getFullYear() - 1 : now.getFullYear()),
+        startYear: (now.getMonth() < 9 ? now.getFullYear() - 1 : now.getFullYear()), // Month 9 is October (0 indexed)
         baseLeaveAllowance: 29,
         extraDays: extraDays,
         holidays: [],
