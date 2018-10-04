@@ -60,7 +60,7 @@ var app = new Vue({
         },
         weekdaysLeft: function () {
             // Get today's date at midnight
-            var today = new Date('' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate());
+            var today = new Date('' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate() + 'T00:00:00.000Z');
             return expandDays(today, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
         },
         workingDaysLeft: function () {
