@@ -64,16 +64,7 @@ var app = new Vue({
             return expandDays(today, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
         },
         workingDaysLeft: function () {
-            var count = 0;
-
-            var self = this;
-            this.weekdaysLeft.forEach(function (day) {
-                if (!self.closureDays.some(function (d) { return d.getTime() === day.getTime(); })) {
-                    count += 1;
-                }
-            });
-
-            return count;
+            return this.weekdaysLeft.length - this.closureDays.filter(function (cd) { return cd > now; })
         },
         progressBarColour: function () {
             if (this.leavePercent < 25) {
