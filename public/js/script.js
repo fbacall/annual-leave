@@ -59,7 +59,9 @@ var app = new Vue({
             return Math.ceil((this.endDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000));
         },
         weekdaysLeft: function () {
-            return expandDays(now, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
+            // Get today's date at midnight
+            var today = new Date('' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate());
+            return expandDays(today, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
         },
         workingDaysLeft: function () {
             var count = 0;
