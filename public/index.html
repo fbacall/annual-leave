@@ -44,9 +44,9 @@
             <div v-if="signedIn">
               Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
               <ol>
-                <li v-for="(event, index) in holidays" :title="event.creator.email">
-                  {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
-                  - <em>{{ event.summary }}</em>
+                <li v-for="(hol, index) in holidaysAndClosureDays" :title="hol.event.creator.email">
+                  {{ hol.start }} ({{ holidaysUsed(hol.event) }} days)
+                  - <em>{{ hol.event.summary }}</em> {{ hol.type }}
                 </li>
               </ol>
             </div>

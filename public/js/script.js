@@ -27,7 +27,7 @@ var app = new Vue({
         baseLeaveAllowance: 29,
         extraDays: extraDays,
         holidays: [],
-        closureDays: [],
+        closureDayEvents: [],
         userName: '',
         userEmail: '',
         status: 'Loading...',
@@ -65,6 +65,31 @@ var app = new Vue({
         },
         workingDaysLeft: function () {
             return this.weekdaysLeft.length - (this.closureDays.filter(function (cd) { return cd > now; }).length);
+        },
+        holidaysAndClosureDays: function () {
+            var set = [];
+            this.holidays.forEach(function (event) {
+                set.push({ type: 'holiday', event: event, start: (event.start.dateTime || event.start.date) });
+            });
+
+            this.closureDayEvents.forEach(function (event) {
+                set.push({ type: 'closure', event: event, start: (event.start.dateTime || event.start.date) });
+            });
+
+            return set.sort(function (a, b) { return new Date(b.start.date) - new Date(a.start.date); });
+        },
+        closureDays: function () {
+            var a = [];
+            this.closureDayEvents.forEach(function (event) {
+                var days = expandDays(event.start.date, event.end.date);
+                days.forEach(function (day) {
+                    if (day.getDay() !== 0 && day.getDay() !== 6) {
+                        a.push(day);
+                    }
+                });
+            });
+
+            return a;
         },
         progressBarColour: function () {
             if (this.leavePercent < 25) {
@@ -136,17 +161,11 @@ function getClosureDays() {
         'maxResults': 1000,
         'orderBy': 'startTime'
     }).then(function(response) {
-        app.closureDays = [];
-
-        response.result.items.forEach(function (event) {
-            if (event.summary.match(/university closed/i)) {
-                var days = expandDays(event.start.date, event.end.date);
-                days.forEach(function (day) {
-                    if (day.getDay() !== 0 && day.getDay() !== 6) {
-                        app.closureDays.push(day);
-                    }
-                });
-            }
+        app.closureDayEvents = response.result.items.filter(function (event) {
+            console.log(event);
+            var x = /university closed/i.test(event.summary);
+            console.log(x);
+            return x;
         });
 
         getLeaveEvents();
