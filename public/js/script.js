@@ -19,10 +19,12 @@ if (paramMatches && paramMatches[1]) {
 }
 
 var now = new Date();
+var originalYear = now.getMonth() < 9 ? now.getFullYear() - 1 : now.getFullYear();  // Month 9 is October (0 indexed)
 var app = new Vue({
     el: '#app',
     data: {
-        startYear: (now.getMonth() < 9 ? now.getFullYear() - 1 : now.getFullYear()), // Month 9 is October (0 indexed)
+        originalYear: originalYear,
+        startYear: originalYear,
         baseLeaveAllowance: 29,
         extraDays: extraDays,
         holidays: [],
