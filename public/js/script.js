@@ -19,7 +19,6 @@ if (paramMatches && paramMatches[1]) {
 }
 
 var now = new Date();
-
 var app = new Vue({
     el: '#app',
     data: {
@@ -37,11 +36,14 @@ var app = new Vue({
         ready: function () {
             return this.status === null;
         },
+        endYear: function () {
+            return this.startYear + 1;
+        },
         startDate: function () {
             return new Date('' + this.startYear + '-10-01');
         },
         endDate: function () {
-            return new Date('' + (this.startYear + 1) + '-09-30');
+            return new Date('' + this.endYear + '-09-30');
         },
         leaveAllowance: function () {
             return this.baseLeaveAllowance + this.extraDays;
@@ -78,11 +80,84 @@ var app = new Vue({
     },
     methods: {
         signIn: function () {
-            app.status = 'Authenticating...';
+            this.status = 'Authenticating...';
             gapi.auth2.getAuthInstance().signIn();
         },
         signOut: function () {
             gapi.auth2.getAuthInstance().signOut();
+        },
+        getClosureDays: function () { // Get university closure days
+            this.status = 'Fetching closure days...';
+            self = this;
+            gapi.client.calendar.events.list({
+                'calendarId': EVENTS,
+                'timeMin': this.startDate.toISOString(),
+                'timeMax': this.endDate.toISOString(),
+                'showDeleted': false,
+                'singleEvents': true,
+                'maxResults': 1000,
+                'orderBy': 'startTime'
+            }).then(function(response) {
+                var closureDays = [];
+
+                response.result.items.forEach(function (event) {
+                    if (event.summary.match(/university closed/i)) {
+                        var days = expandDays(event.start.date, event.end.date);
+                        days.forEach(function (day) {
+                            if (day.getDay() !== 0 && day.getDay() !== 6) {
+                                closureDays.push(day);
+                            }
+                        });
+                    }
+                });
+
+                self.closureDays = closureDays;
+            });
+        },
+        getLeaveEvents: function () { // Get user's annual leave events
+            this.status = 'Fetching leave...';
+            self = this;
+            gapi.client.calendar.events.list({
+                'calendarId': AVAILABILITY,
+                'timeMin': this.startDate.toISOString(),
+                'timeMax': this.endDate.toISOString(),
+                'showDeleted': false,
+                'singleEvents': true,
+                'maxResults': 1000,
+                'orderBy': 'startTime'
+            }).then(function(response) {
+                self.holidays = response.result.items.filter(function (event) {
+                    var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
+                    if (parts) {
+                        var name = parts[1];
+                        var sum = parts[2];
+
+                        if (event.creator.email === self.userEmail || name === self.userName) {
+                            if (sum) {
+                                return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
+                                    (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().includes(t); }) ||
+                                        TAGS.some(function (t) { return sum.includes(t); }))
+                            } else {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                });
+
+                self.status = null;
+            });
+        }
+    },
+    watch: {
+        startYear: function () {
+            this.getClosureDays();
+        },
+        closureDays: function () {
+            this.getLeaveEvents();
         }
     }
 });
@@ -115,80 +190,13 @@ function updateSigninStatus(isSignedIn) {
         var profile = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
         app.userName = profile.getGivenName();
         app.userEmail = profile.getEmail();
-        getClosureDays();
+        app.getClosureDays();
     } else {
         app.status = null;
         app.userName = '';
         app.userEmail = '';
         app.holidays = [];
     }
-}
-
-// Get university closure days
-function getClosureDays() {
-    app.status = 'Fetching closure days...';
-    gapi.client.calendar.events.list({
-        'calendarId': EVENTS,
-        'timeMin': app.startDate.toISOString(),
-        'timeMax': app.endDate.toISOString(),
-        'showDeleted': false,
-        'singleEvents': true,
-        'maxResults': 1000,
-        'orderBy': 'startTime'
-    }).then(function(response) {
-        app.closureDays = [];
-
-        response.result.items.forEach(function (event) {
-            if (event.summary.match(/university closed/i)) {
-                var days = expandDays(event.start.date, event.end.date);
-                days.forEach(function (day) {
-                    if (day.getDay() !== 0 && day.getDay() !== 6) {
-                        app.closureDays.push(day);
-                    }
-                });
-            }
-        });
-
-        getLeaveEvents();
-    });
-}
-
-// Get user's annual leave events
-function getLeaveEvents() {
-    app.status = 'Fetching leave...';
-    gapi.client.calendar.events.list({
-        'calendarId': AVAILABILITY,
-        'timeMin': app.startDate.toISOString(),
-        'timeMax': app.endDate.toISOString(),
-        'showDeleted': false,
-        'singleEvents': true,
-        'maxResults': 1000,
-        'orderBy': 'startTime'
-    }).then(function(response) {
-        app.holidays = response.result.items.filter(function (event) {
-            var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
-            if (parts) {
-                var name = parts[1];
-                var sum = parts[2];
-
-                if (event.creator.email === app.userEmail || name === app.userName) {
-                    if (sum) {
-                        return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
-                            (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().includes(t); }) ||
-                                TAGS.some(function (t) { return sum.includes(t); }))
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        });
-
-        app.status = null;
-    });
 }
 
 /**

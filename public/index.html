@@ -14,7 +14,7 @@
   <div v-cloak class="app-container" id="app">
     <div class="app-header">
       <h3>
-        Annual Leave
+        Annual Leave <small>{{ startYear }} - {{ endYear }}</small>
         <button class="pull-right btn btn-xs btn-default" v-if="ready && signedIn" @click="signOut">Sign Out</button>
       </h3>
     </div>
