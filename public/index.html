@@ -16,7 +16,7 @@
       <h3>
         Annual Leave
         <select v-model="startYear" class="year-select">
-            <option v-for="n in 3" v-bind:value="originalYear - (n - 1)">{{ (originalYear - (n - 1)) }} - {{ (originalYear - (n - 2)) }}</option>
+            <option v-for="(n, i) in 3" v-bind:value="originalYear - i">{{ (originalYear - i) }} - {{ (originalYear - (i - 1)) }}</option>
         </select>
         <button class="pull-right btn btn-xs btn-default" v-if="ready && signedIn" @click="signOut">Sign Out</button>
       </h3>
@@ -46,12 +46,22 @@
           <div v-if="ready">
             <div v-if="signedIn">
               Holiday events created by <strong>{{ userEmail }}</strong> or mentioning <strong>{{ userName }}</strong>:
-              <ol>
-                <li v-for="(event, index) in holidays" :title="event.creator.email">
-                  {{ event.start.dateTime || event.start.date }} ({{ holidaysUsed(event) }} days)
-                  - <em>{{ event.summary }}</em>
-                </li>
-              </ol>
+              <table class="table table-condensed">
+                <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Usage</th>
+                  <th>Details</th>
+                </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(event, index) in holidays" :title="event.creator.email" :class="rowClass(event)">
+                    <td>{{ event.start.dateTime || event.start.date }}</td>
+                    <td>{{ holidaysUsed(event) }} days</td>
+                    <td><span v-html="highlightSummary(event.summary)"></span></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             <div id="authorize-button-container" v-else>
               <p>Sign-in with your Google credentials to see your holidays.</p>

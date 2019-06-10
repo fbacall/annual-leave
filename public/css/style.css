@@ -75,3 +75,7 @@ body {
     border-color: #ccc;
     padding: 2px;
 }
+
+tr.future {
+    background-color: #b7fa8b;
+}

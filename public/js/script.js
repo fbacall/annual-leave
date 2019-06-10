@@ -152,6 +152,25 @@ var app = new Vue({
 
                 self.status = null;
             });
+        },
+        highlightSummary: function (sum) {
+            var summary = sum;
+            var replacer = function (tag) {
+                return "<strong>" + tag + "</strong>";
+            };
+            var highlighter = function (tag, flags) {
+                summary = summary.replace(new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags), replacer);
+            };
+
+            CASELESS_TAGS.forEach(function (t) { highlighter(t, "gi") });
+            TAGS.forEach(function (t) { highlighter(t, "g") });
+
+            return summary;
+        },
+        rowClass: function (event) {
+            if (new Date(event.start.date) > new Date()) {
+                return "future"
+            }
         }
     },
     watch: {
