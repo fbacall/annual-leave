@@ -79,3 +79,8 @@ body {
 tr.future {
     background-color: #b7fa8b;
 }
+
+.al-cost {
+    font-family: monospace;
+    color: #666;
+}
