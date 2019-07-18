@@ -64,7 +64,11 @@ var app = new Vue({
         },
         weekdaysLeft: function () {
             // Get today's date at midnight
-            var today = new Date('' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate() + 'T00:00:00.000Z');
+            var today = new Date(
+                '' + now.getFullYear() +
+                '-' + (now.getMonth() + 1).toString().padStart(2, '0') +
+                '-' + now.getDate().toString().padStart(2, '0') +
+                'T00:00:00.000Z');
             return expandDays(today, this.endDate).filter(function (d) { return d.getDay() !== 0 && d.getDay() !== 6});
         },
         workingDaysLeft: function () {
