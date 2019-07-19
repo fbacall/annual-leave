@@ -77,10 +77,19 @@ body {
 }
 
 tr.future {
-    background-color: #b7fa8b;
+    background-color: #d7f5c4;;
 }
 
 .al-cost {
     font-family: monospace;
     color: #666;
+}
+
+.sortable {
+    cursor: pointer;
+}
+
+.sorter {
+    font-weight: bold;
+    font-size: larger;
 }

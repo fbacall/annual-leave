@@ -32,7 +32,8 @@ var app = new Vue({
         userName: '',
         userEmail: '',
         status: 'Loading...',
-        signedIn: false
+        signedIn: false,
+        dateSort: -1
     },
     computed: {
         ready: function () {
@@ -82,6 +83,14 @@ var app = new Vue({
             } else {
                 return 'progress-bar-success';
             }
+        },
+        sortDirection: function () {
+            return this.dateSort === 1 ? '&uarr;' : '&darr;';
+        },
+        sortedHolidays: function () {
+            console.log('sort');
+            this.dateSort;
+            return this.holidays.sort((a, b) => new Date(a.start.date).getTime() - new Date(b.start.date).getTime() * this.dateSort);
         }
     },
     methods: {
@@ -91,6 +100,9 @@ var app = new Vue({
         },
         signOut: function () {
             gapi.auth2.getAuthInstance().signOut();
+        },
+        switchSort: function () {
+            this.dateSort = (this.dateSort * -1);
         },
         getClosureDays: function () { // Get university closure days
             this.status = 'Fetching closure days...';
