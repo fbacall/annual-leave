@@ -58,7 +58,7 @@ var app = new Vue({
             return this.leaveAllowance - this.leaveTaken;
         },
         leavePercent: function () {
-            return Math.ceil(100 * (this.leaveRemaining / this.leaveAllowance))
+            return Math.ceil(100 * (this.leaveRemaining / this.leaveAllowance));
         },
         weeksLeft: function () {
             return Math.ceil((this.endDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000));
@@ -75,6 +75,12 @@ var app = new Vue({
         workingDaysLeft: function () {
             return this.weekdaysLeft.length - (this.closureDays.filter(function (cd) { return cd > now; }).length);
         },
+        totalWorkingDays: function () {
+            return countWorkingDays(expandDays(this.startDate, this.endDate));
+        },
+        workingDaysLeftPercent: function () {
+            return Math.ceil(100 * (this.workingDaysLeft / this.totalWorkingDays));
+        },
         progressBarColour: function () {
             if (this.leavePercent < 25) {
                 return 'progress-bar-danger';
@@ -88,8 +94,6 @@ var app = new Vue({
             return this.dateSort === 1 ? '&uarr;' : '&darr;';
         },
         sortedHolidays: function () {
-            console.log('sort');
-            this.dateSort;
             return this.holidays.sort((a, b) => new Date(a.start.date).getTime() - new Date(b.start.date).getTime() * this.dateSort);
         }
     },
