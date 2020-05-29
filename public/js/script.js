@@ -123,7 +123,7 @@ var app = new Vue({
                 var closureDays = [];
 
                 response.result.items.forEach(function (event) {
-                    if (event.summary.match(/university closed/i)) {
+                    if (event.summary && event.summary.match(/university closed/i)) {
                         var days = expandDays(event.start.date, event.end.date);
                         days.forEach(function (day) {
                             if (day.getDay() !== 0 && day.getDay() !== 6) {
@@ -149,6 +149,8 @@ var app = new Vue({
                 'orderBy': 'startTime'
             }).then(function(response) {
                 self.holidays = response.result.items.filter(function (event) {
+                    if (!event.summary)
+                        return false;
                     var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
                     if (parts) {
                         var name = parts[1];
