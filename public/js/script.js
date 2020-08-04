@@ -145,7 +145,7 @@ var app = new Vue({
                 'timeMax': this.endDate.toISOString(),
                 'showDeleted': false,
                 'singleEvents': true,
-                'maxResults': 1000,
+                'maxResults': 2500,
                 'orderBy': 'startTime'
             }).then(function(response) {
                 self.holidays = response.result.items.filter(function (event) {
