@@ -193,7 +193,8 @@ var app = new Vue({
             if (new Date(event.start.date) > new Date()) {
                 return "future"
             }
-        }
+        },
+        holidaysUsed
     },
     watch: {
         startYear: function () {
