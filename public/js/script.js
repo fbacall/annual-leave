@@ -7,9 +7,11 @@ var TAGS = ['AL', 'A/L'];
 var HALFDAY_TAGS = ['AM','(AM)','PM','(PM)','pm','morning','afternoon'];
 // Google API stuff
 var CLIENT_ID = '1054709840369-u807mdk8v4maro8q6r2nremo4tajjdmf.apps.googleusercontent.com';
-var API_KEY = 'AIzaSyD5EAF9pYHkuCfMwH7TEB3qK7icef5dEjM';
-var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
-var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
+var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+                      "https://www.googleapis.com/discovery/v1/apis/people/v1/rest"];
+var SCOPES = ["https://www.googleapis.com/auth/calendar.readonly",
+              "https://www.googleapis.com/auth/userinfo.email",
+              "https://www.googleapis.com/auth/userinfo.profile"].join(' ');
 //
 var paramRegex = /\?extra=([0-9]+)/;
 var paramMatches = paramRegex.exec(window.location.href);
@@ -100,13 +102,44 @@ var app = new Vue({
     methods: {
         signIn: function () {
             this.status = 'Authenticating...';
-            gapi.auth2.getAuthInstance().signIn();
+            // Settle this promise in the response callback for requestAccessToken()
+            tokenClient.callback = (resp) => {
+                if (resp.error !== undefined) {
+                    this.status = 'Sign-in error: ' + resp.error;
+                }
+                app.getUserInfo();
+            };
+
+            tokenClient.requestAccessToken({ prompt: '' });
         },
         signOut: function () {
-            gapi.auth2.getAuthInstance().signOut();
+            let cred = gapi.client.getToken();
+            if (cred !== null) {
+                google.accounts.oauth2.revoke(cred.access_token, () => {console.log('Revoked: ' + cred.access_token)});
+                gapi.client.setToken('');
+            }
+            app.signedIn = false;
+            app.status = null;
+            app.userName = '';
+            app.userEmail = '';
+            app.holidays = [];
         },
         switchSort: function () {
             this.dateSort = (this.dateSort * -1);
+        },
+        getUserInfo: function () {
+            this.status = 'Fetching user info...';
+            const self = this;
+            return gapi.client.people.people.get({
+                'resourceName': 'people/me',
+                'personFields': 'names,emailAddresses'
+            }).then(function(response) {
+                self.signedIn = true;
+                self.userName = response.result.names[0].givenName;
+                self.email = response.result.emailAddresses[0].value;
+                self.status = null;
+                self.getClosureDays();
+            });
         },
         getClosureDays: function () { // Get university closure days
             this.status = 'Fetching closure days...';
@@ -206,42 +239,48 @@ var app = new Vue({
     }
 });
 
-// Callback for API client script load.
-function handleClientLoad() {
-    gapi.load('client:auth2', initClient);
-}
+const gapiLoadPromise = new Promise((resolve, reject) => {
+    gapiLoadOkay = resolve;
+    gapiLoadFail = reject;
+});
+const gisLoadPromise = new Promise((resolve, reject) => {
+    gisLoadOkay = resolve;
+    gisLoadFail = reject;
+});
 
-// Initializes the API client library and sets up sign-in state listeners.
-function initClient() {
-    gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        discoveryDocs: DISCOVERY_DOCS,
-        scope: SCOPES
-    }).then(function () {
-        // Listen for sign-in state changes.
-        gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+var tokenClient;
 
-        // Handle the initial sign-in state.
-        updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+(async () => {
+    // First, load and initialize the gapi.client
+    await gapiLoadPromise;
+    await new Promise((resolve, reject) => {
+        // NOTE: the 'auth2' module is no longer loaded.
+        gapi.load('client', {callback: resolve, onerror: reject});
     });
-}
+    await gapi.client.init({
+        // NOTE: OAuth2 'scope' and 'client_id' parameters have moved to initTokenClient().
+    })
+        .then(function() {  // Load the Calendar API discovery document.
+            DISCOVERY_DOCS.forEach((d) => gapi.client.load(d));
+        });
 
-// Callback for user sign in/out.
-function updateSigninStatus(isSignedIn) {
-    app.signedIn = isSignedIn;
-    if (isSignedIn) {
-        var profile = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
-        app.userName = profile.getGivenName();
-        app.userEmail = profile.getEmail();
-        app.getClosureDays();
-    } else {
-        app.status = null;
-        app.userName = '';
-        app.userEmail = '';
-        app.holidays = [];
-    }
-}
+    // Now load the GIS client
+    await gisLoadPromise;
+    await new Promise((resolve, reject) => {
+        try {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                prompt: '',
+                callback: '',  // defined at request time in await/promise scope.
+            });
+            app.status = null;
+            resolve();
+        } catch (err) {
+            reject(err);
+        }
+    });
+})();
 
 /**
  * Returns an array of Dates for each day occurring between the two given dates (inclusive).
