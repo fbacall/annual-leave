@@ -123,6 +123,7 @@ var app = new Vue({
             app.userName = '';
             app.userEmail = '';
             app.holidays = [];
+            localStorage.removeItem('lastEmail');
         },
         switchSort: function () {
             this.dateSort = (this.dateSort * -1);
@@ -136,8 +137,9 @@ var app = new Vue({
             }).then(function(response) {
                 self.signedIn = true;
                 self.userName = response.result.names[0].givenName;
-                self.email = response.result.emailAddresses[0].value;
+                self.userEmail = response.result.emailAddresses[0].value;
                 self.status = null;
+                localStorage.setItem('lastEmail', self.userEmail);
                 self.getClosureDays();
             });
         },
@@ -259,10 +261,9 @@ var tokenClient;
     });
     await gapi.client.init({
         // NOTE: OAuth2 'scope' and 'client_id' parameters have moved to initTokenClient().
-    })
-        .then(function() {  // Load the Calendar API discovery document.
-            DISCOVERY_DOCS.forEach((d) => gapi.client.load(d));
-        });
+    }).then(function() {  // Load the Calendar API discovery document.
+        DISCOVERY_DOCS.forEach((d) => gapi.client.load(d));
+    });
 
     // Now load the GIS client
     await gisLoadPromise;
@@ -271,6 +272,7 @@ var tokenClient;
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: SCOPES,
+                hint: localStorage.getItem('lastEmail'),
                 prompt: '',
                 callback: '',  // defined at request time in await/promise scope.
             });
