@@ -151,7 +151,7 @@ var app = new Vue({
                 self.holidays = response.result.items.filter(function (event) {
                     if (!event.summary)
                         return false;
-                    var parts = event.summary.match(/([a-zA-Z]+) (.+)/);
+                    var parts = event.summary.match(/([a-zA-Z]+)[ \t,:\-.;]+(.+)/);
                     if (parts) {
                         var name = parts[1];
                         var sum = parts[2];
