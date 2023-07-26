@@ -118,6 +118,7 @@ var app = new Vue({
                 'showDeleted': false,
                 'singleEvents': true,
                 'maxResults': 1000,
+                'q': 'closed',
                 'orderBy': 'startTime'
             }).then(function(response) {
                 var closureDays = [];
