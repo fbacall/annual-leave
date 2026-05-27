@@ -159,9 +159,18 @@ var app = new Vue({
 
                         if (event.creator.email === self.userEmail || name === self.userName) {
                             if (sum) {
-                                return !(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
+                                if (!(sum.includes('lieu') || sum.toLowerCase().includes('toil')) &&
                                     (CASELESS_TAGS.some(function (t) { return sum.toLowerCase().includes(t); }) ||
-                                        TAGS.some(function (t) { return sum.includes(t); }))
+                                        TAGS.some(function (t) { return sum.includes(t); })))
+                                    return true;
+                                else {
+                                    // Check for extra days
+                                    const parts = /extra leave\:\s*(\d+)/.exec(sum);
+                                    if (parts) {
+                                        self.extraDays += parseInt(parts[1]);
+                                    }
+                                    return false;
+                                }
                             } else {
                                 return false;
                             }
